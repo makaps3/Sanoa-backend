@@ -8,6 +8,8 @@ migration clears the table before swapping the FK target.
 import django.db.models.deletion
 from django.db import migrations, models
 
+from core.migration_ops import AlterForeignKeyToUUID
+
 
 def wipe_delivery_fares(apps, schema_editor):
     DeliveryFare = apps.get_model('delivery', 'DeliveryFare')
@@ -28,7 +30,7 @@ class Migration(migrations.Migration):
 
     operations = [
         migrations.RunPython(wipe_delivery_fares, reverse_code=noop),
-        migrations.AlterField(
+        AlterForeignKeyToUUID(
             model_name='deliveryfare',
             name='address',
             field=models.ForeignKey(

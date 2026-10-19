@@ -11,17 +11,33 @@ ALLOWED_HOSTS = [
     'localhost',
     '127.0.0.1',
     '192.168.18.62',
+    '20.164.32.137',
     '*.local',
     'constrictively-unreproached-kyndall.ngrok-free.dev',
 ]
 
-# Database - use SQLite for development
-DATABASES = {
-    'default': {
-        'ENGINE': 'django.db.backends.sqlite3',
-        'NAME': BASE_DIR / 'db.sqlite3',
+# Database - PostgreSQL when .env sets DB_ENGINE=django.db.backends.postgresql
+# (credentials live in .env, which git ignores), otherwise the local SQLite file.
+if config('DB_ENGINE', default='') == 'django.db.backends.postgresql':
+    DATABASES = {
+        'default': {
+            'ENGINE': 'django.db.backends.postgresql',
+            'NAME': config('DB_NAME'),
+            'USER': config('DB_USER'),
+            'PASSWORD': config('DB_PASSWORD'),
+            'HOST': config('DB_HOST', default='localhost'),
+            'PORT': config('DB_PORT', default='5432'),
+            'CONN_MAX_AGE': 60,
+            'CONN_HEALTH_CHECKS': True,
+        }
     }
-}
+else:
+    DATABASES = {
+        'default': {
+            'ENGINE': 'django.db.backends.sqlite3',
+            'NAME': BASE_DIR / 'db.sqlite3',
+        }
+    }
 
 # Channels — use in-memory layer in dev so we don't require a running Redis.
 # Note: cross-process broadcasting (e.g. Celery → WS) won't work here, but

@@ -7,6 +7,8 @@ just re-add items after deploy.
 import uuid
 from django.db import migrations, models
 
+from core.migration_ops import AlterPrimaryKeyToUUID
+
 
 def wipe_carts(apps, schema_editor):
     CartItem = apps.get_model('orders', 'CartItem')
@@ -27,7 +29,7 @@ class Migration(migrations.Migration):
 
     operations = [
         migrations.RunPython(wipe_carts, reverse_code=noop),
-        migrations.AlterField(
+        AlterPrimaryKeyToUUID(
             model_name='shoppingcart',
             name='id',
             field=models.UUIDField(default=uuid.uuid4, editable=False, primary_key=True, serialize=False),

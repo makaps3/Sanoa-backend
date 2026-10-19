@@ -4,6 +4,8 @@ import django.core.validators
 import uuid
 from django.db import migrations, models
 
+from core.migration_ops import AlterPrimaryKeyToUUID
+
 
 class Migration(migrations.Migration):
 
@@ -12,7 +14,7 @@ class Migration(migrations.Migration):
     ]
 
     operations = [
-        migrations.AlterField(
+        AlterPrimaryKeyToUUID(
             model_name='negotiationmessage',
             name='id',
             field=models.UUIDField(default=uuid.uuid4, editable=False, primary_key=True, serialize=False),
@@ -27,12 +29,12 @@ class Migration(migrations.Migration):
             name='ai_action',
             field=models.CharField(blank=True, help_text='AI decision: accept / counter / reject', max_length=20, null=True),
         ),
-        migrations.AlterField(
+        AlterPrimaryKeyToUUID(
             model_name='negotiationoffer',
             name='id',
             field=models.UUIDField(default=uuid.uuid4, editable=False, primary_key=True, serialize=False),
         ),
-        migrations.AlterField(
+        AlterPrimaryKeyToUUID(
             model_name='negotiationroom',
             name='id',
             field=models.UUIDField(default=uuid.uuid4, editable=False, primary_key=True, serialize=False),
