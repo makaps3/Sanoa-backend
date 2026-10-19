@@ -1,3 +1,4 @@
+<<<<<<< HEAD
 # Sanoa E-commerce Backend
 
 A comprehensive Django-based e-commerce backend API built with Django REST Framework.
@@ -259,3 +260,7 @@ This project is proprietary software. All rights reserved.
 ## Support
 
 For support and questions, please contact the development team.
+=======
+# Sanoa-backend
+Backend application for sanoa mobile and web app
+>>>>>>> a59693adc1f46eda07b21eaa9448b2753ced248c
