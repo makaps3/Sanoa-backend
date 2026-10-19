@@ -1,0 +1,20 @@
+{% extends "admin/index.html" %}
+
+{% block content %}
+<div class="app-sanoa-dashboard">
+  <h1>Sanoa Admin Quick Stats</h1>
+  <table class="table table-striped" style="width: 100%;">
+    <tbody>
+      <tr><th>Total users</th><td>{{ stats.total_users }}</td></tr>
+      <tr><th>Customers</th><td>{{ stats.total_customers }}</td></tr>
+      <tr><th>Vendors</th><td>{{ stats.total_vendors }}</td></tr>
+      <tr><th>Vendor profiles</th><td>{{ stats.vendor_profiles }}</td></tr>
+      <tr><th>Products</th><td>{{ stats.total_products }}</td></tr>
+      <tr><th>Orders</th><td>{{ stats.total_orders }}</td></tr>
+      <tr><th>Order total value</th><td>R{{ stats.total_order_value }}</td></tr>
+      <tr><th>Active subscriptions</th><td>{{ stats.active_subscriptions }}</td></tr>
+    </tbody>
+  </table>
+  <p><a class="button" href="{% url 'admin:index' %}">Back to main admin</a></p>
+</div>
+{% endblock %}

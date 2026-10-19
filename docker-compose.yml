@@ -1,0 +1,73 @@
+services:
+  db:
+    image: postgres:16-alpine
+    environment:
+      POSTGRES_DB: sanoa
+      POSTGRES_USER: sanoa_user
+      POSTGRES_PASSWORD: sanoa_pass
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+    ports:
+      - "5432:5432"
+
+  redis:
+    image: redis:7-alpine
+    ports:
+      - "6379:6379"
+
+  web:
+    build: .
+    # Daphne serves both HTTP and WebSocket via ASGI
+    command: daphne -b 0.0.0.0 -p 8000 sanoa.asgi:application
+    volumes:
+      - .:/app
+    ports:
+      - "8000:8000"
+    environment:
+      - ENVIRONMENT=development
+      - SECRET_KEY=dev-secret-key-change-in-production
+      - DEBUG=True
+      - DATABASE_URL=postgres://sanoa_user:sanoa_pass@db:5432/sanoa
+      - CELERY_BROKER_URL=redis://redis:6379/0
+      - CELERY_RESULT_BACKEND=redis://redis:6379/0
+      - REDIS_URL=redis://redis:6379/1
+    depends_on:
+      - db
+      - redis
+
+  celery:
+    build: .
+    command: celery -A sanoa worker --loglevel=info
+    volumes:
+      - .:/app
+    environment:
+      - ENVIRONMENT=development
+      - SECRET_KEY=dev-secret-key-change-in-production
+      - DEBUG=True
+      - DATABASE_URL=postgres://sanoa_user:sanoa_pass@db:5432/sanoa
+      - CELERY_BROKER_URL=redis://redis:6379/0
+      - CELERY_RESULT_BACKEND=redis://redis:6379/0
+      - REDIS_URL=redis://redis:6379/1
+    depends_on:
+      - db
+      - redis
+
+  celery-beat:
+    build: .
+    command: celery -A sanoa beat --loglevel=info
+    volumes:
+      - .:/app
+    environment:
+      - ENVIRONMENT=development
+      - SECRET_KEY=dev-secret-key-change-in-production
+      - DEBUG=True
+      - DATABASE_URL=postgres://sanoa_user:sanoa_pass@db:5432/sanoa
+      - CELERY_BROKER_URL=redis://redis:6379/0
+      - CELERY_RESULT_BACKEND=redis://redis:6379/0
+      - REDIS_URL=redis://redis:6379/1
+    depends_on:
+      - db
+      - redis
+
+volumes:
+  postgres_data:

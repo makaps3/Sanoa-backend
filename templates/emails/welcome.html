@@ -1,0 +1,85 @@
+{% extends "emails/base_email.html" %}
+
+{% block subject %}Welcome to Sanoa{% endblock %}
+{% block preheader %}Your Sanoa account is ready. Here's how to get started.{% endblock %}
+
+{% block content %}
+  <table role="presentation" cellpadding="0" cellspacing="0">
+    <tr>
+      <td class="chip-soft" style="background:#eafaf3; border-radius:999px; padding:6px 14px; font-size:11px; font-weight:700; letter-spacing:0.5px; text-transform:uppercase; color:#0f9c6c;">
+        🎉 Account created
+      </td>
+    </tr>
+  </table>
+
+  <h1 class="hero-title ink" style="margin:16px 0 12px; font-size:27px; font-weight:800; letter-spacing:-0.4px; color:#023047;">
+    Welcome to Sanoa, {{ name }}
+  </h1>
+  <p class="ink-soft" style="margin:0 0 26px; font-size:15px; line-height:1.65; color:#5a6b76;">
+    {% if is_vendor %}
+      Your store is live on the marketplace built for African commerce. Let's turn your hustle into a thriving business.
+    {% else %}
+      You're all set to shop local, negotiate fair prices and get what you love delivered to your door.
+    {% endif %}
+  </p>
+
+  {% if is_vendor and has_qr %}
+  <!-- Vendor QR card -->
+  <table role="presentation" width="100%" cellpadding="0" cellspacing="0" style="margin:6px 0 28px;">
+    <tr>
+      <td class="panel" style="background:#f6f9fb; border:1px solid #e7eef2; border-radius:18px; padding:24px;">
+        <table role="presentation" width="100%" cellpadding="0" cellspacing="0">
+          <tr>
+            <td class="qr-cell" width="132" valign="middle" style="width:132px;">
+              <img src="cid:sanoa_qr" width="124" height="124" alt="Store QR code"
+                   style="display:inline-block; width:124px; height:124px; border-radius:14px; background:#ffffff; border:1px solid #e7eef2;">
+            </td>
+            <td class="qr-info" valign="middle" style="padding-left:20px;">
+              <div style="font-size:11px; font-weight:700; text-transform:uppercase; letter-spacing:1px; color:#1c85a6;">Your store QR</div>
+              <div class="ink" style="margin-top:6px; font-size:18px; font-weight:800; color:#023047;">{{ store_name }}</div>
+              <div class="ink-soft" style="margin-top:7px; font-size:13px; line-height:1.6; color:#6f8492;">
+                Print it, share it, or add it to your counter — customers scan to open your store on Sanoa.
+              </div>
+            </td>
+          </tr>
+        </table>
+      </td>
+    </tr>
+  </table>
+  {% endif %}
+
+  <!-- Next steps -->
+  <div class="ink-mute" style="font-size:12px; font-weight:700; text-transform:uppercase; letter-spacing:1.2px; color:#8496a1; margin:0 0 16px;">
+    {% if is_vendor %}Get started in 3 steps{% else %}What's next{% endif %}
+  </div>
+
+  {% if is_vendor %}
+    {% include "emails/_step.html" with n="1" title="List your products" body="Add items, prices and stock — or bulk-upload your whole catalogue." %}
+    {% include "emails/_step.html" with n="2" title="Receive orders" body="Customers find you, negotiate and check out. You confirm and pack." %}
+    {% include "emails/_step.html" with n="3" title="Get paid instantly" body="Deliveries dispatch automatically and payouts land in your wallet." %}
+  {% else %}
+    {% include "emails/_step.html" with n="1" title="Discover nearby" body="Browse thousands of local vendors, restaurants and shops around you." %}
+    {% include "emails/_step.html" with n="2" title="Name your price" body="Make a fair offer with the negotiation engine and settle on a deal." %}
+    {% include "emails/_step.html" with n="3" title="Track to your door" body="Follow your driver live and chat with them right in the app." %}
+  {% endif %}
+
+  <!-- CTA -->
+  <table role="presentation" width="100%" cellpadding="0" cellspacing="0" style="margin-top:30px;">
+    <tr>
+      <td align="center">
+        <!--[if mso]>
+        <v:roundrect xmlns:v="urn:schemas-microsoft-com:vml" xmlns:w="urn:schemas-microsoft-com:office:word" href="{{ site_url }}" style="height:50px;v-text-anchor:middle;width:260px;" arcsize="100%" fillcolor="#f59e0b" stroke="f">
+          <w:anchorlock/><center style="color:#023047;font-family:Arial,sans-serif;font-size:15px;font-weight:bold;">
+          {% if is_vendor %}Open your dashboard{% else %}Start shopping{% endif %}</center>
+        </v:roundrect>
+        <![endif]-->
+        <!--[if !mso]><!-->
+        <a href="{{ site_url }}" class="btn"
+           style="display:inline-block; background:#f59e0b; color:#023047; font-size:15px; font-weight:800; text-decoration:none; padding:15px 36px; border-radius:999px; box-shadow:0 8px 20px -6px rgba(245,158,11,0.5);">
+          {% if is_vendor %}Open your dashboard{% else %}Start shopping{% endif %}  →
+        </a>
+        <!--<![endif]-->
+      </td>
+    </tr>
+  </table>
+{% endblock %}

@@ -1,0 +1,100 @@
+{% extends "emails/base_email.html" %}
+
+{% block subject %}Subscription receipt · {{ tier_name }}{% endblock %}
+{% block preheader %}Receipt {{ invoice_no }} for your {{ tier_name }} subscription — PDF attached.{% endblock %}
+
+{% block content %}
+  <table role="presentation" width="100%" cellpadding="0" cellspacing="0">
+    <tr>
+      <td valign="top">
+        <div style="font-size:11px; font-weight:800; text-transform:uppercase; letter-spacing:1.4px; color:#1c85a6;">Subscription receipt</div>
+        <h1 class="hero-title ink" style="margin:7px 0 0; font-size:25px; font-weight:800; letter-spacing:-0.4px; color:#023047;">{{ invoice_no }}</h1>
+      </td>
+      <td valign="top" align="right">
+        {% if paid_at %}<div class="ink-mute" style="font-size:12.5px; color:#8496a1;">Paid {{ paid_at|date:"d M Y" }}</div>{% endif %}
+        <div class="chip-soft" style="display:inline-block; margin-top:8px; padding:5px 13px; border-radius:999px; background:#e9fbf3; color:#0f9c6c; font-size:10.5px; font-weight:800; text-transform:uppercase; letter-spacing:0.6px;">
+          ✓ Paid
+        </div>
+      </td>
+    </tr>
+  </table>
+
+  <p class="ink-soft" style="margin:18px 0 22px; font-size:14px; line-height:1.65; color:#5a6b76;">
+    Hi {{ name }}, thanks for subscribing. This is your receipt for the <strong class="ink" style="color:#023047;">{{ tier_name }}</strong> plan on <strong class="ink" style="color:#023047;">{{ store_name }}</strong>. A PDF copy is attached.
+  </p>
+
+  <!-- Billed to / payment -->
+  <table role="presentation" width="100%" cellpadding="0" cellspacing="0" class="panel" style="margin:0 0 24px; background:#f6f9fb; border:1px solid #e7eef2; border-radius:16px;">
+    <tr>
+      <td style="padding:18px 20px;">
+        <table role="presentation" width="100%" cellpadding="0" cellspacing="0">
+          <tr>
+            <td class="stack" width="50%" valign="top" style="width:50%;">
+              <div class="ink-mute" style="font-size:10.5px; font-weight:700; text-transform:uppercase; letter-spacing:0.6px; color:#8496a1;">Billed to</div>
+              <div class="ink" style="margin-top:5px; font-size:13.5px; font-weight:700; color:#023047;">{{ store_name }}</div>
+            </td>
+            <td class="stack" width="50%" valign="top" style="width:50%;">
+              <div class="ink-mute" style="font-size:10.5px; font-weight:700; text-transform:uppercase; letter-spacing:0.6px; color:#8496a1;">Payment</div>
+              <div class="ink" style="margin-top:5px; font-size:13px; color:#2b3a44;">{% if card %}{{ card }}{% else %}Card{% endif %}</div>
+              <div class="ink-soft" style="font-size:12px; color:#7c909c;">Ref: {{ reference }}</div>
+            </td>
+          </tr>
+        </table>
+      </td>
+    </tr>
+  </table>
+
+  <!-- Line item -->
+  <table role="presentation" width="100%" cellpadding="0" cellspacing="0" class="panel"
+         style="border:1px solid #e7eef2; border-radius:16px; overflow:hidden;">
+    <tr style="background:#f6f9fb;">
+      <td class="cell-tight ink-mute" style="padding:12px 18px; font-size:10.5px; font-weight:800; text-transform:uppercase; letter-spacing:0.6px; color:#8496a1;">Description</td>
+      <td class="cell-tight ink-mute" align="right" style="padding:12px 18px; font-size:10.5px; font-weight:800; text-transform:uppercase; letter-spacing:0.6px; color:#8496a1;">Amount</td>
+    </tr>
+    <tr class="row-border" style="border-top:1px solid #eef2f5;">
+      <td class="cell-tight ink" style="padding:15px 18px; font-size:14px; color:#2b3a44;">
+        {{ tier_name }} plan · {{ billing }}
+        {% if period_start and period_end %}
+        <div class="ink-mute" style="font-size:12px; color:#9aabb5;">{{ period_start|date:"d M Y" }} – {{ period_end|date:"d M Y" }}</div>
+        {% endif %}
+      </td>
+      <td class="cell-tight ink" align="right" style="padding:15px 18px; font-size:14px; font-weight:600; color:#023047;">R{{ amount }}</td>
+    </tr>
+  </table>
+
+  <!-- Total -->
+  <table role="presentation" width="100%" cellpadding="0" cellspacing="0" style="margin-top:18px;">
+    <tr>
+      <td class="stack hide-sm" style="font-size:0; line-height:0;">&nbsp;</td>
+      <td class="stack totals-box" width="250" style="width:250px;">
+        <table role="presentation" width="100%" cellpadding="0" cellspacing="0">
+          <tr>
+            <td class="ink" style="padding:10px 0 0; font-size:15px; font-weight:800; color:#023047;">Total paid</td>
+            <td align="right" style="padding:10px 0 0; font-size:22px; font-weight:800; color:#10b981;">R{{ amount }}</td>
+          </tr>
+        </table>
+      </td>
+    </tr>
+  </table>
+
+  {% if has_pdf %}
+  <table role="presentation" width="100%" cellpadding="0" cellspacing="0" style="margin-top:28px;">
+    <tr>
+      <td align="center">
+        <!--[if mso]>
+        <v:roundrect xmlns:v="urn:schemas-microsoft-com:vml" xmlns:w="urn:schemas-microsoft-com:office:word" href="{{ site_url }}" style="height:48px;v-text-anchor:middle;width:250px;" arcsize="100%" fillcolor="#023047" stroke="f">
+          <w:anchorlock/><center style="color:#ffffff;font-family:Arial,sans-serif;font-size:14px;font-weight:bold;">Download receipt (PDF)</center>
+        </v:roundrect>
+        <![endif]-->
+        <!--[if !mso]><!-->
+        <a href="{{ site_url }}" class="btn"
+           style="display:inline-block; background:#023047; color:#ffffff; font-size:14px; font-weight:700; text-decoration:none; padding:14px 32px; border-radius:999px;">
+          ⬇  Download receipt (PDF)
+        </a>
+        <!--<![endif]-->
+        <div class="ink-mute" style="margin-top:11px; font-size:12px; color:#9aabb5;">The PDF is also attached to this email.</div>
+      </td>
+    </tr>
+  </table>
+  {% endif %}
+{% endblock %}

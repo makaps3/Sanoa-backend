@@ -1,0 +1,852 @@
+{
+	"info": {
+		"name": "Sanoa - Authentication Tests",
+		"description": "Complete authentication test suite for the Sanoa backend API.\n\nCovers: registration, JWT login, token refresh, token verify, get profile, OTP send/verify/resend, and error cases.",
+		"schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
+	},
+	"variable": [
+		{
+			"key": "base_url",
+			"value": "http://127.0.0.1:8101",
+			"type": "string"
+		},
+		{
+			"key": "access_token",
+			"value": "",
+			"type": "string"
+		},
+		{
+			"key": "refresh_token",
+			"value": "",
+			"type": "string"
+		},
+		{
+			"key": "test_email",
+			"value": "testuser@example.com",
+			"type": "string"
+		},
+		{
+			"key": "test_password",
+			"value": "TestPass123!",
+			"type": "string"
+		},
+		{
+			"key": "otp_code",
+			"value": "",
+			"type": "string"
+		}
+	],
+	"item": [
+		{
+			"name": "1. Registration",
+			"item": [
+				{
+					"name": "Register - New Customer",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"exec": [
+									"pm.test('Status is 201 Created', function () {",
+									"    pm.response.to.have.status(201);",
+									"});",
+									"",
+									"pm.test('Response contains user and tokens', function () {",
+									"    var json = pm.response.json();",
+									"    pm.expect(json).to.have.property('user');",
+									"    pm.expect(json).to.have.property('tokens');",
+									"    pm.expect(json.tokens).to.have.property('access');",
+									"    pm.expect(json.tokens).to.have.property('refresh');",
+									"});",
+									"",
+									"pm.test('User email matches', function () {",
+									"    var json = pm.response.json();",
+									"    pm.expect(json.user.email).to.eql(pm.collectionVariables.get('test_email'));",
+									"});",
+									"",
+									"pm.test('User type is customer', function () {",
+									"    var json = pm.response.json();",
+									"    pm.expect(json.user.user_type).to.eql('customer');",
+									"});",
+									"",
+									"// Save tokens for later use",
+									"if (pm.response.code === 201) {",
+									"    var json = pm.response.json();",
+									"    pm.collectionVariables.set('access_token', json.tokens.access);",
+									"    pm.collectionVariables.set('refresh_token', json.tokens.refresh);",
+									"}"
+								],
+								"type": "text/javascript"
+							}
+						}
+					],
+					"request": {
+						"method": "POST",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n    \"email\": \"{{test_email}}\",\n    \"username\": \"testuser\",\n    \"first_name\": \"Test\",\n    \"last_name\": \"User\",\n    \"phone_number\": \"+27712345678\",\n    \"user_type\": \"customer\",\n    \"password\": \"{{test_password}}\",\n    \"password_confirm\": \"{{test_password}}\"\n}"
+						},
+						"url": {
+							"raw": "{{base_url}}/api/accounts/register/",
+							"host": ["{{base_url}}"],
+							"path": ["api", "accounts", "register", ""]
+						},
+						"description": "Register a new customer user. Returns user data and JWT tokens."
+					}
+				},
+				{
+					"name": "Register - Duplicate Email (should fail)",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"exec": [
+									"pm.test('Status is 400 Bad Request', function () {",
+									"    pm.response.to.have.status(400);",
+									"});",
+									"",
+									"pm.test('Error mentions email already exists', function () {",
+									"    var json = pm.response.json();",
+									"    var body = JSON.stringify(json).toLowerCase();",
+									"    pm.expect(body).to.include('email');",
+									"});"
+								],
+								"type": "text/javascript"
+							}
+						}
+					],
+					"request": {
+						"method": "POST",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n    \"email\": \"{{test_email}}\",\n    \"username\": \"testuser2\",\n    \"first_name\": \"Test\",\n    \"last_name\": \"Duplicate\",\n    \"phone_number\": \"+27712345679\",\n    \"user_type\": \"customer\",\n    \"password\": \"{{test_password}}\",\n    \"password_confirm\": \"{{test_password}}\"\n}"
+						},
+						"url": {
+							"raw": "{{base_url}}/api/accounts/register/",
+							"host": ["{{base_url}}"],
+							"path": ["api", "accounts", "register", ""]
+						},
+						"description": "Attempt to register with an email that already exists. Should return 400."
+					}
+				},
+				{
+					"name": "Register - Password Mismatch (should fail)",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"exec": [
+									"pm.test('Status is 400 Bad Request', function () {",
+									"    pm.response.to.have.status(400);",
+									"});",
+									"",
+									"pm.test('Error mentions passwords', function () {",
+									"    var json = pm.response.json();",
+									"    var body = JSON.stringify(json).toLowerCase();",
+									"    pm.expect(body).to.include('password');",
+									"});"
+								],
+								"type": "text/javascript"
+							}
+						}
+					],
+					"request": {
+						"method": "POST",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n    \"email\": \"mismatch@example.com\",\n    \"username\": \"mismatchuser\",\n    \"first_name\": \"Test\",\n    \"last_name\": \"Mismatch\",\n    \"phone_number\": \"+27712345680\",\n    \"user_type\": \"customer\",\n    \"password\": \"TestPass123!\",\n    \"password_confirm\": \"WrongPass456!\"\n}"
+						},
+						"url": {
+							"raw": "{{base_url}}/api/accounts/register/",
+							"host": ["{{base_url}}"],
+							"path": ["api", "accounts", "register", ""]
+						},
+						"description": "Attempt to register with mismatched passwords. Should return 400."
+					}
+				},
+				{
+					"name": "Register - Missing Required Fields (should fail)",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"exec": [
+									"pm.test('Status is 400 Bad Request', function () {",
+									"    pm.response.to.have.status(400);",
+									"});"
+								],
+								"type": "text/javascript"
+							}
+						}
+					],
+					"request": {
+						"method": "POST",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n    \"email\": \"incomplete@example.com\"\n}"
+						},
+						"url": {
+							"raw": "{{base_url}}/api/accounts/register/",
+							"host": ["{{base_url}}"],
+							"path": ["api", "accounts", "register", ""]
+						},
+						"description": "Attempt to register with missing required fields. Should return 400."
+					}
+				},
+				{
+					"name": "Register - Short Password (should fail)",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"exec": [
+									"pm.test('Status is 400 Bad Request', function () {",
+									"    pm.response.to.have.status(400);",
+									"});"
+								],
+								"type": "text/javascript"
+							}
+						}
+					],
+					"request": {
+						"method": "POST",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n    \"email\": \"shortpw@example.com\",\n    \"username\": \"shortpwuser\",\n    \"first_name\": \"Short\",\n    \"last_name\": \"Password\",\n    \"phone_number\": \"+27712345681\",\n    \"user_type\": \"customer\",\n    \"password\": \"123\",\n    \"password_confirm\": \"123\"\n}"
+						},
+						"url": {
+							"raw": "{{base_url}}/api/accounts/register/",
+							"host": ["{{base_url}}"],
+							"path": ["api", "accounts", "register", ""]
+						},
+						"description": "Attempt to register with a password shorter than 8 characters. Should return 400."
+					}
+				}
+			],
+			"description": "User registration tests - success and failure cases."
+		},
+		{
+			"name": "2. JWT Login",
+			"item": [
+				{
+					"name": "Login - Valid Credentials",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"exec": [
+									"pm.test('Status is 200 OK', function () {",
+									"    pm.response.to.have.status(200);",
+									"});",
+									"",
+									"pm.test('Response contains access and refresh tokens', function () {",
+									"    var json = pm.response.json();",
+									"    pm.expect(json).to.have.property('access');",
+									"    pm.expect(json).to.have.property('refresh');",
+									"    pm.expect(json.access).to.be.a('string').and.not.empty;",
+									"    pm.expect(json.refresh).to.be.a('string').and.not.empty;",
+									"});",
+									"",
+									"// Save tokens",
+									"if (pm.response.code === 200) {",
+									"    var json = pm.response.json();",
+									"    pm.collectionVariables.set('access_token', json.access);",
+									"    pm.collectionVariables.set('refresh_token', json.refresh);",
+									"}"
+								],
+								"type": "text/javascript"
+							}
+						}
+					],
+					"request": {
+						"method": "POST",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n    \"email\": \"{{test_email}}\",\n    \"password\": \"{{test_password}}\"\n}"
+						},
+						"url": {
+							"raw": "{{base_url}}/api/auth/token/",
+							"host": ["{{base_url}}"],
+							"path": ["api", "auth", "token", ""]
+						},
+						"description": "Login with valid credentials. Returns access and refresh JWT tokens."
+					}
+				},
+				{
+					"name": "Login - Wrong Password (should fail)",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"exec": [
+									"pm.test('Status is 401 Unauthorized', function () {",
+									"    pm.response.to.have.status(401);",
+									"});",
+									"",
+									"pm.test('Response contains error detail', function () {",
+									"    var json = pm.response.json();",
+									"    pm.expect(json).to.have.property('detail');",
+									"});"
+								],
+								"type": "text/javascript"
+							}
+						}
+					],
+					"request": {
+						"method": "POST",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n    \"email\": \"{{test_email}}\",\n    \"password\": \"WrongPassword999!\"\n}"
+						},
+						"url": {
+							"raw": "{{base_url}}/api/auth/token/",
+							"host": ["{{base_url}}"],
+							"path": ["api", "auth", "token", ""]
+						},
+						"description": "Attempt login with wrong password. Should return 401."
+					}
+				},
+				{
+					"name": "Login - Non-existent User (should fail)",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"exec": [
+									"pm.test('Status is 401 Unauthorized', function () {",
+									"    pm.response.to.have.status(401);",
+									"});"
+								],
+								"type": "text/javascript"
+							}
+						}
+					],
+					"request": {
+						"method": "POST",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n    \"email\": \"nonexistent@example.com\",\n    \"password\": \"SomePassword123!\"\n}"
+						},
+						"url": {
+							"raw": "{{base_url}}/api/auth/token/",
+							"host": ["{{base_url}}"],
+							"path": ["api", "auth", "token", ""]
+						},
+						"description": "Attempt login with a non-existent email. Should return 401."
+					}
+				},
+				{
+					"name": "Login - Empty Body (should fail)",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"exec": [
+									"pm.test('Status is 400 Bad Request', function () {",
+									"    pm.response.to.have.status(400);",
+									"});"
+								],
+								"type": "text/javascript"
+							}
+						}
+					],
+					"request": {
+						"method": "POST",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{}"
+						},
+						"url": {
+							"raw": "{{base_url}}/api/auth/token/",
+							"host": ["{{base_url}}"],
+							"path": ["api", "auth", "token", ""]
+						},
+						"description": "Attempt login with empty body. Should return 400."
+					}
+				}
+			],
+			"description": "JWT token obtain (login) tests."
+		},
+		{
+			"name": "3. Token Refresh",
+			"item": [
+				{
+					"name": "Refresh Token - Valid",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"exec": [
+									"pm.test('Status is 200 OK', function () {",
+									"    pm.response.to.have.status(200);",
+									"});",
+									"",
+									"pm.test('Response contains new access token', function () {",
+									"    var json = pm.response.json();",
+									"    pm.expect(json).to.have.property('access');",
+									"    pm.expect(json.access).to.be.a('string').and.not.empty;",
+									"});",
+									"",
+									"// Save new access token",
+									"if (pm.response.code === 200) {",
+									"    var json = pm.response.json();",
+									"    pm.collectionVariables.set('access_token', json.access);",
+									"}"
+								],
+								"type": "text/javascript"
+							}
+						}
+					],
+					"request": {
+						"method": "POST",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n    \"refresh\": \"{{refresh_token}}\"\n}"
+						},
+						"url": {
+							"raw": "{{base_url}}/api/auth/token/refresh/",
+							"host": ["{{base_url}}"],
+							"path": ["api", "auth", "token", "refresh", ""]
+						},
+						"description": "Refresh the access token using a valid refresh token."
+					}
+				},
+				{
+					"name": "Refresh Token - Invalid Token (should fail)",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"exec": [
+									"pm.test('Status is 401 Unauthorized', function () {",
+									"    pm.response.to.have.status(401);",
+									"});",
+									"",
+									"pm.test('Response contains error detail', function () {",
+									"    var json = pm.response.json();",
+									"    pm.expect(json).to.have.property('detail');",
+									"});"
+								],
+								"type": "text/javascript"
+							}
+						}
+					],
+					"request": {
+						"method": "POST",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n    \"refresh\": \"invalid.token.value\"\n}"
+						},
+						"url": {
+							"raw": "{{base_url}}/api/auth/token/refresh/",
+							"host": ["{{base_url}}"],
+							"path": ["api", "auth", "token", "refresh", ""]
+						},
+						"description": "Attempt to refresh with an invalid token. Should return 401."
+					}
+				}
+			],
+			"description": "JWT token refresh tests."
+		},
+		{
+			"name": "4. Token Verify",
+			"item": [
+				{
+					"name": "Verify Token - Valid Access Token",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"exec": [
+									"pm.test('Status is 200 OK', function () {",
+									"    pm.response.to.have.status(200);",
+									"});"
+								],
+								"type": "text/javascript"
+							}
+						}
+					],
+					"request": {
+						"method": "POST",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n    \"token\": \"{{access_token}}\"\n}"
+						},
+						"url": {
+							"raw": "{{base_url}}/api/auth/token/verify/",
+							"host": ["{{base_url}}"],
+							"path": ["api", "auth", "token", "verify", ""]
+						},
+						"description": "Verify that a valid access token is accepted."
+					}
+				},
+				{
+					"name": "Verify Token - Invalid Token (should fail)",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"exec": [
+									"pm.test('Status is 401 Unauthorized', function () {",
+									"    pm.response.to.have.status(401);",
+									"});"
+								],
+								"type": "text/javascript"
+							}
+						}
+					],
+					"request": {
+						"method": "POST",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n    \"token\": \"invalid.token.here\"\n}"
+						},
+						"url": {
+							"raw": "{{base_url}}/api/auth/token/verify/",
+							"host": ["{{base_url}}"],
+							"path": ["api", "auth", "token", "verify", ""]
+						},
+						"description": "Verify that an invalid token is rejected. Should return 401."
+					}
+				},
+				{
+					"name": "Verify Token - Empty Token (should fail)",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"exec": [
+									"pm.test('Status is 400 Bad Request', function () {",
+									"    pm.response.to.have.status(400);",
+									"});"
+								],
+								"type": "text/javascript"
+							}
+						}
+					],
+					"request": {
+						"method": "POST",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n    \"token\": \"\"\n}"
+						},
+						"url": {
+							"raw": "{{base_url}}/api/auth/token/verify/",
+							"host": ["{{base_url}}"],
+							"path": ["api", "auth", "token", "verify", ""]
+						},
+						"description": "Verify that an empty token is rejected. Should return 400."
+					}
+				}
+			],
+			"description": "JWT token verification tests."
+		},
+		{
+			"name": "5. Authenticated Profile",
+			"item": [
+				{
+					"name": "Get Profile - With Valid Token",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"exec": [
+									"pm.test('Status is 200 OK', function () {",
+									"    pm.response.to.have.status(200);",
+									"});",
+									"",
+									"pm.test('Response contains user email', function () {",
+									"    var json = pm.response.json();",
+									"    pm.expect(json).to.have.property('email');",
+									"    pm.expect(json.email).to.eql(pm.collectionVariables.get('test_email'));",
+									"});"
+								],
+								"type": "text/javascript"
+							}
+						}
+					],
+					"request": {
+						"method": "GET",
+						"header": [
+							{
+								"key": "Authorization",
+								"value": "Bearer {{access_token}}"
+							}
+						],
+						"url": {
+							"raw": "{{base_url}}/api/accounts/me/",
+							"host": ["{{base_url}}"],
+							"path": ["api", "accounts", "me", ""]
+						},
+						"description": "Get the authenticated user's profile using a valid access token."
+					}
+				},
+				{
+					"name": "Get Profile - No Token (should fail)",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"exec": [
+									"pm.test('Status is 401 Unauthorized', function () {",
+									"    pm.response.to.have.status(401);",
+									"});"
+								],
+								"type": "text/javascript"
+							}
+						}
+					],
+					"request": {
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "{{base_url}}/api/accounts/me/",
+							"host": ["{{base_url}}"],
+							"path": ["api", "accounts", "me", ""]
+						},
+						"description": "Attempt to get profile without an auth token. Should return 401."
+					}
+				},
+				{
+					"name": "Get Profile - Expired/Invalid Token (should fail)",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"exec": [
+									"pm.test('Status is 401 Unauthorized', function () {",
+									"    pm.response.to.have.status(401);",
+									"});"
+								],
+								"type": "text/javascript"
+							}
+						}
+					],
+					"request": {
+						"method": "GET",
+						"header": [
+							{
+								"key": "Authorization",
+								"value": "Bearer expired.invalid.token"
+							}
+						],
+						"url": {
+							"raw": "{{base_url}}/api/accounts/me/",
+							"host": ["{{base_url}}"],
+							"path": ["api", "accounts", "me", ""]
+						},
+						"description": "Attempt to get profile with an invalid/expired token. Should return 401."
+					}
+				}
+			],
+			"description": "Authenticated endpoint tests to verify token-based access works."
+		},
+		{
+			"name": "6. OTP Verification",
+			"item": [
+				{
+					"name": "Send OTP",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"exec": [
+									"pm.test('Status is 200 or 201', function () {",
+									"    pm.expect(pm.response.code).to.be.oneOf([200, 201]);",
+									"});"
+								],
+								"type": "text/javascript"
+							}
+						}
+					],
+					"request": {
+						"method": "POST",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							},
+							{
+								"key": "Authorization",
+								"value": "Bearer {{access_token}}"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n    \"email\": \"{{test_email}}\",\n    \"purpose\": \"verification\"\n}"
+						},
+						"url": {
+							"raw": "{{base_url}}/api/otp/send/",
+							"host": ["{{base_url}}"],
+							"path": ["api", "otp", "send", ""]
+						},
+						"description": "Send an OTP code to the user's email for verification."
+					}
+				},
+				{
+					"name": "Verify OTP - Invalid Code (should fail)",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"exec": [
+									"pm.test('Status is 400 Bad Request', function () {",
+									"    pm.response.to.have.status(400);",
+									"});"
+								],
+								"type": "text/javascript"
+							}
+						}
+					],
+					"request": {
+						"method": "POST",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							},
+							{
+								"key": "Authorization",
+								"value": "Bearer {{access_token}}"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n    \"email\": \"{{test_email}}\",\n    \"code\": \"000000\",\n    \"purpose\": \"verification\"\n}"
+						},
+						"url": {
+							"raw": "{{base_url}}/api/otp/verify/",
+							"host": ["{{base_url}}"],
+							"path": ["api", "otp", "verify", ""]
+						},
+						"description": "Attempt to verify with an invalid OTP code. Should return 400."
+					}
+				},
+				{
+					"name": "Resend OTP",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"exec": [
+									"pm.test('Status is 200 or 201', function () {",
+									"    pm.expect(pm.response.code).to.be.oneOf([200, 201]);",
+									"});"
+								],
+								"type": "text/javascript"
+							}
+						}
+					],
+					"request": {
+						"method": "POST",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							},
+							{
+								"key": "Authorization",
+								"value": "Bearer {{access_token}}"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n    \"email\": \"{{test_email}}\",\n    \"purpose\": \"verification\"\n}"
+						},
+						"url": {
+							"raw": "{{base_url}}/api/otp/resend/",
+							"host": ["{{base_url}}"],
+							"path": ["api", "otp", "resend", ""]
+						},
+						"description": "Resend an OTP code to the user's email."
+					}
+				}
+			],
+			"description": "OTP send, verify, and resend tests."
+		}
+	]
+}

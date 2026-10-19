@@ -1,0 +1,9 @@
+{% extends "emails/base_email.html" %}
+{% block content %}
+<h1>Your administrator invitation</h1>
+<p>You have been invited to Sanoa as {{ invitation.get_role_display }} in {{ invitation.get_department_display }}.</p>
+<p>Register in the Sanoa app using {{ invitation.email }}, verify your email, then paste this token into the Administrator access screen:</p>
+<p style="font-family:monospace;word-break:break-all;padding:16px;background:#f2f5f8;">{{ invitation.token }}</p>
+<p>This invitation expires on {{ invitation.expires_at|date:"j F Y, H:i T" }}. Your role and permissions are assigned by your administrator.</p>
+<p>If you were not expecting this invitation, you can ignore this email.</p>
+{% endblock %}

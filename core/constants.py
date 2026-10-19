@@ -1,0 +1,59 @@
+"""
+Constants used throughout the application
+"""
+
+# Pagination
+DEFAULT_PAGE_SIZE = 20
+MAX_PAGE_SIZE = 100
+
+# Image dimensions
+PRODUCT_IMAGE_MAX_WIDTH = 800
+PRODUCT_IMAGE_MAX_HEIGHT = 800
+AVATAR_IMAGE_MAX_WIDTH = 300
+AVATAR_IMAGE_MAX_HEIGHT = 300
+BRAND_LOGO_MAX_WIDTH = 500
+BRAND_LOGO_MAX_HEIGHT = 500
+
+# Product
+MIN_PRODUCT_PRICE = 0.01
+MAX_PRODUCT_PRICE = 999999.99
+DEFAULT_COMMISSION_RATE = 5.0  # 5%
+
+# Inventory
+DEFAULT_MIN_STOCK_LEVEL = 10
+DEFAULT_REORDER_QUANTITY = 50
+
+# Cart
+MAX_QUANTITY_PER_ITEM = 999
+MIN_QUANTITY_PER_ITEM = 1
+
+# Orders
+DEFAULT_RETURN_WINDOW_DAYS = 30
+ORDER_EXPIRY_DAYS = 7  # Pending orders expire after 7 days
+
+# Loyalty
+LOYALTY_POINTS_PER_RAND = 1  # 1 point per R1 spent
+
+# Email
+NEWSLETTER_BATCH_SIZE = 100
+
+# API
+SEARCH_FIELDS_PRODUCT = ['name', 'description', 'sku', 'category__name', 'brand__name']
+ORDERING_FIELDS_PRODUCT = ['price', 'created_at', 'sales_count', 'average_rating']
+SEARCH_FIELDS_ORDER = ['order_number', 'user__email']
+ORDERING_FIELDS_ORDER = ['created_at', 'total_amount', 'status']
+
+# Caching
+CACHE_TIMEOUT_SHORT = 300  # 5 minutes
+CACHE_TIMEOUT_MEDIUM = 3600  # 1 hour
+CACHE_TIMEOUT_LONG = 86400  # 24 hours
+
+# Rate limiting
+RATE_LIMIT_ANON_AUTH_ATTEMPTS = '5/hour'
+RATE_LIMIT_AUTH_API_CALLS = '1000/hour'
+RATE_LIMIT_CHECKOUT = '10/hour'
+
+# Payment
+PAYMENT_TIMEOUT_MINUTES = 15
+PAYMENT_RETRY_ATTEMPTS = 3
+PAYMENT_RETRY_DELAY_SECONDS = 300

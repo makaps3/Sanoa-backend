@@ -1,0 +1,21 @@
+# Include inside the TLS server block. Never expose the entire media directory
+# through a CDN, object bucket or another web server without equivalent rules.
+location ~* ^/media/(docs|documents|drivers/(id_docs|insurance|licenses))(/|$) {
+    return 404;
+}
+
+# Keep this as a normal prefix location: ^~ would bypass the private-file rule.
+location /media/ {
+    alias /app/media/;
+    autoindex off;
+    add_header X-Content-Type-Options nosniff always;
+}
+
+location /api/accounts/documents/ {
+    proxy_pass http://sanoa:8000;
+    proxy_set_header Host $host;
+    proxy_set_header X-Forwarded-Proto $scheme;
+    proxy_set_header Authorization $http_authorization;
+    proxy_no_cache 1;
+    proxy_cache_bypass 1;
+}
