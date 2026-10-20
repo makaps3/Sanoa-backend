@@ -15,8 +15,12 @@ ALLOWED_HOSTS = ['*']
 # Use in-memory SQLite database for tests
 DATABASES = {
     'default': {
-        'ENGINE': 'django.db.backends.sqlite3',
-        'NAME': ':memory:',
+            'ENGINE': 'django.db.backends.postgresql',
+            'NAME': 'sanoa database',
+            'USER': 'postgres',
+            'PASSWORD': '12345@Linda',
+            'HOST': 'localhost',
+            'PORT': '5432',
     }
 }
 

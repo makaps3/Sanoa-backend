@@ -2,6 +2,8 @@
 Development settings for Sanoa project
 """
 from decouple import config
+from django.core.exceptions import ImproperlyConfigured
+
 from .base import *
 
 # Development-specific settings
@@ -16,28 +18,26 @@ ALLOWED_HOSTS = [
     'constrictively-unreproached-kyndall.ngrok-free.dev',
 ]
 
-# Database - PostgreSQL when .env sets DB_ENGINE=django.db.backends.postgresql
-# (credentials live in .env, which git ignores), otherwise the local SQLite file.
-if config('DB_ENGINE', default='') == 'django.db.backends.postgresql':
-    DATABASES = {
-        'default': {
-            'ENGINE': 'django.db.backends.postgresql',
-            'NAME': config('DB_NAME'),
-            'USER': config('DB_USER'),
-            'PASSWORD': config('DB_PASSWORD'),
-            'HOST': config('DB_HOST', default='localhost'),
-            'PORT': config('DB_PORT', default='5432'),
-            'CONN_MAX_AGE': 60,
-            'CONN_HEALTH_CHECKS': True,
-        }
+# Database - PostgreSQL only (credentials live in .env, which git ignores).
+# There is deliberately no SQLite fallback: a missing or wrong DB_ENGINE
+# stops startup instead of silently using db.sqlite3.
+if config('DB_ENGINE', default='') != 'django.db.backends.postgresql':
+    raise ImproperlyConfigured(
+        'Set DB_ENGINE=django.db.backends.postgresql (plus DB_NAME, DB_USER, '
+        'DB_PASSWORD, DB_HOST, DB_PORT) in .env - development runs on PostgreSQL.'
+    )
+DATABASES = {
+    'default': {
+        'ENGINE': 'django.db.backends.postgresql',
+        'NAME': config('DB_NAME'),
+        'USER': config('DB_USER'),
+        'PASSWORD': config('DB_PASSWORD'),
+        'HOST': config('DB_HOST', default='localhost'),
+        'PORT': config('DB_PORT', default='5432'),
+        'CONN_MAX_AGE': 60,
+        'CONN_HEALTH_CHECKS': True,
     }
-else:
-    DATABASES = {
-        'default': {
-            'ENGINE': 'django.db.backends.sqlite3',
-            'NAME': BASE_DIR / 'db.sqlite3',
-        }
-    }
+}
 
 # Channels — use in-memory layer in dev so we don't require a running Redis.
 # Note: cross-process broadcasting (e.g. Celery → WS) won't work here, but
